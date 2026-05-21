@@ -1,113 +1,115 @@
 # claude-jira-task
 
-Claude Code 안에서 **Jira 등록 · 상태 전이 · 작업 격리(worktree 또는 현재 디렉토리 선택)** 를 한 워크플로로 묶은 플러그인.
+> 한국어 버전: [docs/ko/README.md](docs/ko/README.md)
 
-## 핵심 기능
+A Claude Code plugin that bundles **Jira issue registration, status transitions, and per-task work isolation (separate worktree or current directory)** into a single workflow.
 
-| 기능 | 동작 |
+## Core features
+
+| Feature | Behavior |
 |---|---|
-| `/jira-task <요약>` | 새 Jira 이슈 등록 (이슈 타입·요약·상세·assignee·Epic·라벨·격리 방식을 순차 확인) |
-| repo 단위 default project | 새 repo 의 첫 호출 시점에 한 번만 묻고 `.claude/jira-config.json` 에 저장 |
-| 강제 등록 | 산출물 있는 작업이면 "등록할까요?" 묻지 않고 바로 등록 절차 진입 |
-| 자동 상태 전이 | 편집/Bash → `In Progress`, 커밋/PR → `Resolved` 자동 전이 (Closed 만 수동) |
-| 작업 격리 (등록 시 선택) | **별도 worktree** (sibling 경로 `<repo>-<KEY>`, 다중 task 동시 진행 안전) 또는 **현재 디렉토리** (dev server / IDE / 브라우저 컨텍스트 재사용 — 프론트엔드 작업 권장) 중 선택. 어느 쪽이든 새 브랜치는 동일 |
-| 활성 task 추적 | `.claude/active-jira-tasks.json` 에 다중 task 상태 보관 (`worktree_path` 가 비어 있으면 현재 디렉토리 모드) |
-| 버전 알림 | `/jira-task` 첫 호출 시 marketplace 의 origin/main 과 로컬 설치 버전을 비교해 새 버전 있으면 한 줄 안내 (24h 캐시, best-effort, 실패 시 침묵) |
+| `/jira-task <summary>` | Create a new Jira issue (walks through issue type, summary, description, assignee, Epic, labels, and isolation mode in order) |
+| Repo-scoped default project | Asked only once on the first call inside a new repo, then stored in `.claude/jira-config.json` |
+| Forced registration | For work that produces artifacts, skips the "register?" prompt and enters the registration flow directly |
+| Automatic status transitions | Edit / Bash → `In Progress`, commit / PR → `Resolved` (only Closed requires a manual step) |
+| Work isolation (chosen at registration) | Pick either **separate worktree** (sibling path `<repo>-<KEY>`, safe for running multiple tasks in parallel) or **current directory** (reuses dev server / IDE / browser context — recommended for frontend work). A new branch is created either way. |
+| Active task tracking | Multi-task state stored in `.claude/active-jira-tasks.json` (an empty `worktree_path` means current-directory mode) |
+| Version notice | On the first `/jira-task` call, compares the marketplace `origin/main` with the locally installed version and prints a one-line notice if a newer version exists (24h cache, best-effort, silent on failure) |
 
-## 의존성
+## Dependencies
 
-| 항목 | 요구 | 비고 |
+| Item | Requirement | Notes |
 |---|---|---|
-| **Claude Code** | ≥ 플러그인 시스템 지원 버전 | 모든 OS |
-| **Atlassian MCP server** | Anthropic 공식 Atlassian Remote MCP | 아래 [Atlassian MCP 설치](#atlassian-mcp-설치) 참고. 미설치 시 `/jira-task` 첫 호출 때 안내가 자동으로 뜸 |
-| **git** | ≥ 2.5 | worktree 사용 |
-| **bash** | 모든 OS — Linux/macOS 는 기본, Windows 는 Git Bash 로 충족 | Hook wrapper 가 bash 로 동작 |
-| **Python** | 3.x (`python3` 또는 `python` 어느 쪽이든 PATH 에 있으면 OK) | Hook 스크립트 실행. 없으면 hook 만 비활성(skill 본문은 그대로 동작) |
+| **Claude Code** | ≥ a version that supports the plugin system | All OSes |
+| **Atlassian MCP server** | Anthropic's official Atlassian Remote MCP | See [Installing the Atlassian MCP](#installing-the-atlassian-mcp) below. If missing, an installation notice is printed automatically on the first `/jira-task` call. |
+| **git** | ≥ 2.5 | Used for worktrees |
+| **bash** | All OSes — built in on Linux/macOS, satisfied by Git Bash on Windows | The hook wrapper runs in bash |
+| **Python** | 3.x (either `python3` or `python` on PATH is fine) | Runs the hook script. If missing, only the hook is disabled (the skill body keeps working). |
 
-### Atlassian MCP 설치
+### Installing the Atlassian MCP
 
 ```
 claude mcp add --transport http atlassian https://mcp.atlassian.com/v1/mcp
 ```
 
-설치 후 Claude Code 를 재시작하면 OAuth 인증 화면이 나옴. 인증 완료까지 한 번만 필요.
+After installation, restart Claude Code — an OAuth screen appears. Authentication is required only once.
 
-공식 가이드: https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/
+Official guide: https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/
 
-> Plugin 설치 후 `/jira-task` 를 호출했을 때 MCP 가 없으면 위 안내가 자동으로 출력되어 등록 흐름이 중단됩니다 — 그 시점에 위 명령을 실행해도 됩니다.
+> If the MCP is missing when `/jira-task` is invoked after installing the plugin, the notice above is printed automatically and the registration flow stops — you can run the command above at that point.
 
-## 설치
+## Installation
 
 ```
 /plugin marketplace add <this-repo-url>
 /plugin install <plugin-name>
 ```
 
-설치 후 Claude Code 를 재시작하면 `/jira-task` 슬래시 명령이 활성화된다.
+After installation, restart Claude Code to activate the `/jira-task` slash command.
 
-## 첫 사용
+## First use
 
-새 repo 폴더 안에서:
+Inside a new repo folder:
 
 ```
-/jira-task 로그인 화면 OAuth 버그 수정
+/jira-task fix OAuth bug on the login screen
 ```
 
-첫 호출이면 다음 흐름이 자동으로 진행된다:
+On the first call, the following flow runs automatically:
 
-1. 사용 가능한 Jira 프로젝트 목록에서 default 선택 → `.claude/jira-config.json` 에 저장
-2. 이슈 타입 / 요약 / 상세 / assignee / Epic / 라벨 / **격리 방식** 차례로 승인
-3. `mcp__atlassian__createJiraIssue` 로 등록
-4. 격리 방식에 따라 분기 — **별도 worktree** 선택 시 sibling worktree(`<repo>-<KEY>`) 자동 생성 + 그 안으로 컨텍스트 이동 / **현재 디렉토리** 선택 시 cwd 에서 `git checkout -b <type>/<KEY>-<slug>` 만 수행
-5. 첫 파일 편집 시 `In Progress` 자동 전이
+1. Pick a default project from the available Jira project list → saved to `.claude/jira-config.json`
+2. Confirm issue type / summary / description / assignee / Epic / labels / **isolation mode** in order
+3. Create the issue via `mcp__atlassian__createJiraIssue`
+4. Branch by isolation mode — **separate worktree** creates a sibling worktree (`<repo>-<KEY>`) and moves the context into it; **current directory** just runs `git checkout -b <type>/<KEY>-<slug>` in the cwd
+5. Auto-transitions to `In Progress` on the first file edit
 
-이후 동일 repo 에서는 default project 를 다시 묻지 않는다.
+Subsequent calls inside the same repo never ask for the default project again.
 
-### 언제 어떤 격리 방식을 고를까
+### Which isolation mode to pick
 
-| 상황 | 권장 |
+| Situation | Recommendation |
 |---|---|
-| Backend · 에이전트 · 라이브러리 작업, 동시에 여러 task 진행 가능 | **별도 worktree** (기본) |
-| Frontend 작업 — dev server 핫리로드, 브라우저 미리보기, IDE 인덱스 재사용이 중요 | **현재 디렉토리** |
-| 한 사람이 한 번에 한 가지 task 만 다룸 | **현재 디렉토리** 가 더 가벼움 |
-| `.env.local` / Docker 볼륨 / `node_modules` 등 로컬 캐시 의존 큰 작업 | **현재 디렉토리** (worktree 는 매번 새로 깔아야 함) |
+| Backend, agent, library work; possibly running multiple tasks in parallel | **Separate worktree** (default) |
+| Frontend work — dev server hot reload, browser preview, and reusing the IDE index matter | **Current directory** |
+| You only handle one task at a time | **Current directory** is lighter |
+| Heavy reliance on local caches like `.env.local`, Docker volumes, or `node_modules` | **Current directory** (a worktree would force you to set them up again) |
 
-## 소비 repo 의 권장 `.gitignore`
+## Recommended `.gitignore` for consuming repos
 
-이 플러그인이 만드는 두 파일은 **로컬 개인 상태** 라 git 에 올리지 말 것:
+The two files this plugin creates hold **local, personal state** — don't commit them:
 
 ```gitignore
-# Claude Code — claude-jira-task plugin 의 로컬 상태
+# Claude Code — local state for the claude-jira-task plugin
 .claude/active-jira-tasks.json
 .claude/jira-config.json
 ```
 
-(Claude Code 의 다른 개인 설정 `.claude/settings.local.json` 도 같이 무시 권장.)
+(Ignoring Claude Code's other personal setting `.claude/settings.local.json` is also recommended.)
 
-## 서브 명령 요약
+## Subcommand summary
 
-| 호출 | 의미 |
+| Invocation | Meaning |
 |---|---|
-| `/jira-task <요약>` | 신규 등록 |
-| `/jira-task list` | 현재 활성 task 목록 |
-| `/jira-task switch <KEY>` | 작업 컨텍스트 전환 (worktree 동반) |
-| `/jira-task deactivate <KEY>` | 활성 목록에서 제거 (Jira 이슈는 그대로) |
-| `/jira-task config reset` | 이 repo 의 default project 제거 — 다음 호출에 다시 선택 |
-| `/jira-task config set <KEY>` | 이 repo 의 default project 즉시 변경 |
+| `/jira-task <summary>` | New registration |
+| `/jira-task list` | List currently active tasks |
+| `/jira-task switch <KEY>` | Switch work context (moves into the worktree if any) |
+| `/jira-task deactivate <KEY>` | Remove from the active list (Jira issue is left as-is) |
+| `/jira-task config reset` | Drop this repo's default project — the next call will ask again |
+| `/jira-task config set <KEY>` | Overwrite this repo's default project immediately |
 
-자세한 워크플로 규칙은 `skills/jira-task/SKILL.md` 본문 참고.
+For the full workflow rules see `skills/jira-task/SKILL.md`.
 
-## Hook 동작 — git commit 게이트
+## Hook behavior — git commit gate
 
-플러그인은 `PreToolUse` hook 을 함께 등록합니다. Claude 가 `git commit` 을 실행하기 직전 다음을 검사:
+The plugin also registers a `PreToolUse` hook. Right before Claude runs `git commit` it checks:
 
-1. 현재 repo 에 `.claude/jira-config.json` 이 있는가? (없으면 통과 — 워크플로 opt-out)
-2. 현재 브랜치 이름에 활성 task 키(`TASK-123` 등) 가 포함되는가?
+1. Does the current repo have `.claude/jira-config.json`? (If not, the hook passes — workflow opt-out)
+2. Does the current branch name contain an active task key (e.g. `TASK-123`)?
 
-매칭 안 되면 hook 이 커밋을 차단하고 Claude 에게 "`/jira-task` 로 먼저 등록하세요" 메시지를 돌려줍니다. Claude 는 그 자리에서 등록 흐름으로 진입 → 새 worktree 에서 커밋을 다시 시도합니다.
+If neither matches, the hook blocks the commit and returns "register first with `/jira-task`" to Claude. Claude then enters the registration flow on the spot and retries the commit in the new worktree.
 
-**한계**: Claude Code 외부 터미널/IDE 에서 직접 `git commit` 하는 경우 hook 은 발동 안 됨. 그 케이스까지 차단하려면 각 repo 에 `.git/hooks/pre-commit` 별도 설정 필요.
+**Limitation**: The hook does not fire when `git commit` is run directly from a terminal or IDE outside Claude Code. To block that case as well, configure a `.git/hooks/pre-commit` in each repo.
 
-## 변경 / 확장
+## Modifying / extending
 
-워크플로 본문은 `skills/jira-task/SKILL.md` 에 있다. 팀 차원에서 규칙을 바꾸려면 그 파일을 수정해 PR.
+The workflow body lives in `skills/jira-task/SKILL.md`. To change the rules at the team level, edit that file and open a PR.
