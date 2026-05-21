@@ -1,0 +1,20 @@
+{
+  "name": "claude-jira-task",
+  "version": "0.1.5",
+  "description": "Claude Code 안에서 Jira task 등록·전환·자동 상태 전이 + repo 단위 default project + task 별 작업 격리(worktree 또는 현재 디렉토리 선택) + git commit 게이트 hook",
+  "author": {
+    "name": "parsingk",
+    "email": "whdvlf2006@gmail.com"
+  },
+  "commands": "./commands/",
+  "skills": "./skills/",
+  "keywords": [
+    "jira",
+    "workflow",
+    "git-worktree",
+    "task-management",
+    "hook",
+    "pre-tool-use",
+    "korean"
+  ]
+}

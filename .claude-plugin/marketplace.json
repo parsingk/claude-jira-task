@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-jira-task",
+  "description": "Jira 등록 · 상태 전이 · git worktree 자동 분리를 묶은 Claude Code 워크플로 플러그인 마켓플레이스",
+  "owner": {
+    "name": "parsingk",
+    "email": "whdvlf2006@gmail.com"
+  },
+  "metadata": {
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "claude-jira-task",
+      "source": "./",
+      "description": "Jira task 등록·전환·자동 상태 전이 + repo 단위 default project + task 별 git worktree 자동 분리 워크플로. `/jira-task` 슬래시 명령으로 진입.",
+      "category": "productivity",
+      "tags": ["jira", "workflow", "git-worktree", "task-management", "korean"]
+    }
+  ]
+}

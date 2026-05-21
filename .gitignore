@@ -1,0 +1,17 @@
+# Claude Code 로컬 개인 상태 (이 플러그인 소스 repo 자체에는 보통 생기지 않지만, 만약을 위해)
+.claude/active-jira-tasks.json
+.claude/jira-config.json
+.claude/settings.local.json
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# Python
+__pycache__/
+*.pyc

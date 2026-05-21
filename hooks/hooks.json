@@ -1,0 +1,16 @@
+{
+  "description": "claude-jira-task plugin — Block git commit when no active Jira task matches the current branch. Opt-in per repo via .claude/jira-config.json.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/run-python.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
