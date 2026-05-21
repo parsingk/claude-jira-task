@@ -36,37 +36,6 @@ claude mcp add --transport http atlassian https://mcp.atlassian.com/v1/mcp
 
 > Plugin 설치 후 `/jira-task` 를 호출했을 때 MCP 가 없으면 위 안내가 자동으로 출력되어 등록 흐름이 중단됩니다 — 그 시점에 위 명령을 실행해도 됩니다.
 
-#### 기존 사용자 — endpoint 마이그레이션 (≥ v0.1.1)
-
-Atlassian 이 2026-06-30 부로 HTTP+SSE 트랜스포트(`/v1/sse`) 지원을 종료합니다. 그 이전에 등록한 사용자는 Streamable HTTP(`/v1/mcp`) 로 재등록해야 합니다:
-
-```
-claude mcp remove atlassian
-claude mcp add --transport http atlassian https://mcp.atlassian.com/v1/mcp
-```
-
-재등록 후 Claude Code 를 재시작하면 OAuth 인증 화면이 한 번만 다시 뜹니다. **인증 토큰은 기존 endpoint 와 완전히 분리돼 있어** 새로 발급받는 게 정상입니다 — 자세한 동작은 아래 [Troubleshooting § MCP 재인증](#1-mcp-재인증--serverurl-이-바뀌면-새-oauth-identity) 참고.
-
-미마이그레이션 시 2026-06-30 이후 `/jira-task` 가 "Atlassian MCP 서버 미설치" 안내를 띄우게 됩니다.
-
-공지 원문: https://community.atlassian.com/forums/Atlassian-Remote-MCP-Server/HTTP-SSE-Deprecation-Notice/ba-p/3205484
-
-### Python 환경별 안내
-
-플러그인의 PreToolUse hook 은 `python3` 명령이 있으면 우선 사용하고, 없으면 `python` 으로 fallback 합니다.
-
-| OS | 기본 동작 | 추가 설치 필요? |
-|---|---|---|
-| **macOS** (Big Sur 이전) | `python3` 사용 | macOS 12+ 라면 Xcode CLT 또는 Homebrew 로 `python3` 설치 (`brew install python`) |
-| **macOS** (Monterey 12.3+) | Xcode CLT 또는 Homebrew 로 설치 후 `python3` 사용 | 위와 동일 |
-| **Linux** (Ubuntu/Debian/Fedora 등) | `python3` 사용 | 보통 기본 제공. 없으면 `sudo apt install python3` 등 |
-| **Windows** + Anaconda | `python` 사용 | 별도 설치 불필요 |
-| **Windows** + python.org 인스톨러 | `python` 사용 | 별도 설치 불필요 |
-| **Windows** + Microsoft Store Python | `python3` 또는 `python` 둘 다 가능 | 별도 설치 불필요 |
-| **Windows** — Python 미설치 | Hook 만 비활성, 나머지 동작은 정상 | python.org 또는 Microsoft Store 에서 Python 3 설치 후 Claude Code 재시작 |
-
-Python 이 PATH 에 전혀 없어도 hook 만 비활성화될 뿐 `/jira-task` 등록·전이·worktree 흐름은 정상 동작합니다 (커밋 강제 게이트만 사라짐).
-
 ## 설치
 
 ```
